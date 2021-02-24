@@ -49,6 +49,7 @@ var mainPrompt=()=>{
     })
 }
 
+//
 function viewPrompt()
 {
     inquirer.prompt(
@@ -61,7 +62,14 @@ function viewPrompt()
             }
         ]).then(answer=>{
            if(answer.table_name==="employee"){
-               console.log("View all employees");
+            connection.query("select first_name as 'Fisrt Name', last_name as 'Last Name',title as 'Title', name as 'Department', salary from employee emp1 join role on emp1.role_id=role.id join department on role.department_id=department.id group by role.id;",function(err,result){
+                if(err) throw err;
+                console.log("          --ALL EMPLOYEES INFORMATION--");
+                console.log(" ")
+                console.table(result);
+                mainPrompt();
+            })
+              
            }
         })
 }
