@@ -71,5 +71,13 @@ function viewPrompt()
             })
               
            }
+           else if(answer.table_name==="department"){
+               connection.query("select name as 'List of Departments' from department",function(err,result){
+                if(err) throw err;
+                console.log(" ")
+                console.table(result);
+                mainPrompt();  
+               })
+           }
         })
 }
