@@ -79,5 +79,14 @@ function viewPrompt()
                 mainPrompt();  
                })
            }
+           else if(answer.table_name==="role"){
+            connection.query("SELECT title AS 'Position', name AS 'Department', salary AS 'Salary', COUNT(employee.role_id) AS 'Total Employees' FROM role LEFT OUTER JOIN department ON role.department_id = department.id LEFT OUTER JOIN employee ON employee.role_id = role.id GROUP BY role.id;",function(err,result){
+             if(err) throw err;
+             console.log("       --ALL ROLES INFORMATION--");
+             console.log(" ")
+             console.table(result);
+             mainPrompt();  
+            })
+            }
         })
 }
