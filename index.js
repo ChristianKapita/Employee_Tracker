@@ -40,18 +40,17 @@ var mainPrompt=()=>{
                 addDataTable();
                 break;
             case "Update" :
-                 console.log("Wanna Update");
+                UpdateDataTable();
                 break;
-             case "Remove" :
-                console.log("Wanna Remove");
-                 break;
+            //  case "Remove" :
+            //     console.log("Wanna Remove");
+            //      break;
              case "Quit" :
                 console.log("Good Bye");
-                
                 //var test=getDepartmentChoice();
                 connection.end();
-
                 break;
+                
         }
     })
 }
@@ -69,17 +68,19 @@ function viewPrompt()
             }
         ]).then(answer=>{
            if(answer.table_name==="employee"){
-            connection.query("select first_name as 'Fisrt Name', last_name as 'Last Name',title as 'Title', name as 'Department', salary from employee emp1 join role on emp1.role_id=role.id join department on role.department_id=department.id group by role.id;",function(err,result){
-                if(err) throw err;
+            //connection.query("select first_name as 'Fisrt Name', last_name as 'Last Name',title as 'Title', name as 'Department', salary from employee emp1 join role on emp1.role_id=role.id join department on role.department_id=department.id group by role.id order by emp1.first_name;",function(err,result){
+                connection.query("SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, concat(m.first_name, ' ' ,  m.last_name) AS manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY ID ASC",function(err,result){
+            if(err) throw err;
                 console.log("          --ALL EMPLOYEES INFORMATION--");
                 console.log(" ")
                 console.table(result);
                 mainPrompt();
             })
+
               
            }
            else if(answer.table_name==="department"){
-               connection.query("select name as 'List of Departments' from department",function(err,result){
+               connection.query("select id, name as 'List of Departments' from department",function(err,result){
                 if(err) throw err;
                 console.log(" ")
                 console.table(result);
@@ -87,7 +88,7 @@ function viewPrompt()
                })
            }
            else if(answer.table_name==="role"){
-            connection.query("SELECT title AS 'Position', name AS 'Department', salary AS 'Salary', COUNT(employee.role_id) AS 'Total Employees' FROM role LEFT OUTER JOIN department ON role.department_id = department.id LEFT OUTER JOIN employee ON employee.role_id = role.id GROUP BY role.id;",function(err,result){
+            connection.query("SELECT title AS 'Position', name AS 'Department', salary AS 'Salary', COUNT(employee.role_id) AS 'Total Employees' FROM role LEFT OUTER JOIN department ON role.department_id = department.id LEFT OUTER JOIN employee ON employee.role_id = role.id GROUP BY role.id order by role.title ASC;",function(err,result){
              if(err) throw err;
              console.log("       --ALL ROLES INFORMATION--");
              console.log(" ")
@@ -138,6 +139,31 @@ function addDataTable(){
         }
         else if(answers.table_name === "employees"){
             addEmployee();
+        }
+    }
+    );
+
+
+}
+
+//Update prompt
+function UpdateDataTable(){
+    inquirer.prompt([
+        {
+            message: "What do you want to add?",
+            name: "table_name",
+            type: "list",
+            choices: [
+                {
+                    name: "Update employee role",
+                    value: "employees"
+                }
+            ]
+        }
+    ]).then(answers => {
+
+     if(answers.table_name === "employees"){
+        updateEmployeeRole();
         }
     }
     );
@@ -343,4 +369,80 @@ function addEmployee(){
             });
     });
 
+}
+
+//Function to update employee role
+function updateEmployeeRole(){
+    let employeeArr = [];
+    let roleArr = [];
+
+    // Create connection using promise-sql
+    promisemysql.createConnection(connectionProperties
+    ).then((conn) => {
+        return Promise.all([
+
+            // query all roles and employee
+            conn.query('SELECT id, title FROM role ORDER BY title ASC'), 
+            conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS Employee FROM employee ORDER BY Employee ASC")
+        ]);
+    }).then(([roles, employees]) => {
+
+        // place all roles in array
+        for (i=0; i < roles.length; i++){
+            roleArr.push(roles[i].title);
+        }
+
+        // place all empoyees in array
+        for (i=0; i < employees.length; i++){
+            employeeArr.push(employees[i].Employee);
+            //console.log(value[i].name);
+        }
+
+        return Promise.all([roles, employees]);
+    }).then(([roles, employees]) => {
+
+        inquirer.prompt([
+            {
+                // prompt user to select employee
+                name: "employee",
+                type: "list",
+                message: "Who would you like to edit?",
+                choices: employeeArr
+            }, {
+                // Select role to update employee
+                name: "role",
+                type: "list",
+                message: "What is their new role?",
+                choices: roleArr
+            },]).then((answer) => {
+
+                let roleID;
+                let employeeID;
+
+                /// get ID of role selected
+                for (i=0; i < roles.length; i++){
+                    if (answer.role == roles[i].title){
+                        roleID = roles[i].id;
+                    }
+                }
+
+                // get ID of employee selected
+                for (i=0; i < employees.length; i++){
+                    if (answer.employee == employees[i].Employee){
+                        employeeID = employees[i].id;
+                    }
+                }
+                
+                // update employee with new role
+                connection.query(`UPDATE employee SET role_id = ${roleID} WHERE id = ${employeeID}`, (err, res) => {
+                    if(err) return err;
+
+                    // confirm update employee
+                    console.log(`\n ${answer.employee} ROLE UPDATED TO ${answer.role}...\n `);
+
+                    // back to main menu
+                    mainPrompt();
+                });
+            });
+    });
 }
