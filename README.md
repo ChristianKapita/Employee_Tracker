@@ -34,9 +34,9 @@ node  index.js
 ## Usage
 ### Screenshots
 
-1. Working app
+1. Working app Demo
 
-![Alt Text](https://media.giphy.com/media/wSMpG93ieVr1iZjm6l/giphy.gif)
+![Alt Text](https://media.giphy.com/media/oRryAv5oja1eLjf0KJ/giphy.gif)
 
 ## Credits
 

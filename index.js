@@ -29,7 +29,7 @@ var mainPrompt=()=>{
             message:"What do you want to do?",
             type:"list",
             name:"whatToDo",
-            choices:["View","Add","Update","Remove","Quit"]
+            choices:["View","Add","Update","Quit"]
         }
     ]).then (answer =>{
         switch(answer.whatToDo){
@@ -483,7 +483,7 @@ function viewDptBudget(){
             }
 
             // add to array
-            
+
             deptBudgetArr.push(department);
         }
         console.log("\n");
